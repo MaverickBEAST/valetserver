@@ -1,7 +1,10 @@
+/* eslint-disable prettier/prettier */
+// eslint-disable-next-line prettier/prettier
 const { Router } = require('express');
 const { Transaction } = require('braintree');
 const logger = require('debug');
 const gateway = require('../lib/gateway');
+const { response } = require('../app');
 
 const router = Router(); // eslint-disable-line new-cap
 const debug = logger('braintree_example:router');
@@ -52,11 +55,8 @@ router.get('/', (req, res) => {
 });
 
 router.get('/checkouts/new', (req, res) => {
-  gateway.clientToken.generate({}).then(({ clientToken }) => {
-    res.render('checkouts/new', {
-      clientToken,
-      messages: req.flash('error'),
-    });
+  gateway.clientToken.generate({},function (err,response) {
+    res.send(JSON.stringify(response));
   });
 });
 
@@ -85,9 +85,7 @@ router.post('/checkouts', (req, res) => {
 
       return new Promise((resolve, reject) => {
         if (success || transaction) {
-          res.redirect(`checkouts/${transaction.id}`);
-
-          resolve();
+          res.send(result);
         }
 
         reject(result);
@@ -97,9 +95,7 @@ router.post('/checkouts', (req, res) => {
       const deepErrors = errors.deepErrors();
 
       debug('errors from transaction.sale %O', deepErrors);
-
-      req.flash('error', { msg: formatErrors(deepErrors) });
-      res.redirect('checkouts/new');
+      res.send(formatErrors(deepErrors));
     });
 });
 
